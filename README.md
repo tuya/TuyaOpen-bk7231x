@@ -1,2 +1,2 @@
 # tuyaopen-platform-bk7231x
-bk7231n &amp;&amp; bk7231t For Tuyaopen
+This repository is a sub-repository of tuyaopen and cannot be compiled and used independently. It will be automatically downloaded in tuyaopen. For detailed usage instructions, please refer to [https://github.com/tuya/tuyaopen](https://github.com/tuya/tuyaopen).
