@@ -27,3 +27,4 @@ SET (CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_DIR}/bin)
 
 set(CMAKE_C_FLAGS "-g -mthumb -mcpu=arm968e-s -march=armv5te -mthumb-interwork -mlittle-endian -Os -std=c99 -ffunction-sections -Wall -fsigned-char -fdata-sections -Wunknown-pragmas -nostdlib -Wno-unused-function -Wno-unused-but-set-variable -Wno-format")
+set(CMAKE_CXX_FLAGS "-g -mthumb -mcpu=arm968e-s -march=armv5te -mthumb-interwork -mlittle-endian -Os -std=c++11 -ffunction-sections -Wall -fsigned-char -fdata-sections -Wunknown-pragmas -nostdlib -Wno-unused-function -Wno-unused-but-set-variable -Wno-format -Wno-write-strings")

@@ -1100,6 +1100,8 @@ void user_main_entry(void)
 {
     user_recovery_rfcali_data();
 
+    __asm("BL __libc_init_array");
+
     extern void tuya_app_main(void);
     tuya_app_main();
     /*

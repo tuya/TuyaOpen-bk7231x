@@ -17,6 +17,7 @@ ota_idx = 1
 # Compilation tools
 AR = $(CROSS_COMPILE)ar
 CC = $(CROSS_COMPILE)gcc
+CPP = $(CROSS_COMPILE)g++
 AS = $(CROSS_COMPILE)as
 NM = $(CROSS_COMPILE)nm
 LD = $(CROSS_COMPILE)gcc
@@ -726,9 +727,10 @@ TY_SRC_DIRS += $(shell find ../tuyaos/tuyaos_adapter/src -type d)
 TY_SRC_DIRS += $(shell find ../tuyaos/tuyaos_adapter/include -type d)
 
 SRC_C += $(foreach dir, $(TY_SRC_DIRS), $(wildcard $(dir)/*.c)) # need export
-SRC_C += $(foreach dir, $(TY_SRC_DIRS), $(wildcard $(dir)/*.cpp)) 
 SRC_C += $(foreach dir, $(TY_SRC_DIRS), $(wildcard $(dir)/*.s)) 
 SRC_C += $(foreach dir, $(TY_SRC_DIRS), $(wildcard $(dir)/*.S)) 
+
+SRC_CPP = $(foreach dir, $(TY_SRC_DIRS), $(wildcard $(dir)/*.cc)) 
 
 #assembling files
 SRC_S = 
@@ -739,6 +741,7 @@ SRC_S +=  ./beken378/driver/entry/boot_vectors.S
 # -------------------------------------------------------------------
 # remove leading ../, ../.., ../../.. 
 OBJ_LIST = $(patsubst $(OBJ_DIR)/../%,$(OBJ_DIR)/%,$(patsubst $(OBJ_DIR)/../%,$(OBJ_DIR)/%,$(patsubst $(OBJ_DIR)/../%,$(OBJ_DIR)/%,$(SRC_C:%.c=$(OBJ_DIR)/%.o))))
+OBJ_LIST += $(patsubst $(OBJ_DIR)/../%,$(OBJ_DIR)/%,$(patsubst $(OBJ_DIR)/../%,$(OBJ_DIR)/%,$(patsubst $(OBJ_DIR)/../%,$(OBJ_DIR)/%,$(SRC_CPP:%.cc=$(OBJ_DIR)/%.o))))
 # The same as previoius, but cost too must time
 # OBJ_LIST = $(foreach n,$(SRC_C:%.c=$(OBJ_DIR)/%.o),$(shell echo $(n) | sed -e 's|\.\./||g'))
 DEPENDENCY_LIST = $(patsubst %.o,%.d,$(OBJ_LIST))
@@ -749,10 +752,15 @@ DEPENDENCY_S_LIST = $(SRC_S:%.S=$(OBJ_DIR)/%.d)
 OBJ_OS_LIST = $(SRC_OS:%.c=$(OBJ_DIR)/%.marm.o)
 DEPENDENCY_OS_LIST = $(SRC_OS:%.c=$(OBJ_DIR)/%.d)
 
+DEPENDENCY_CPP_LIST = $(SRC_CPP:%.cc=$(OBJ_DIR)/%.d)
+
 # Compile options
 # -------------------------------------------------------------------
 CFLAGS =
 CFLAGS += -g -mthumb -mcpu=arm968e-s -march=armv5te -mthumb-interwork -mlittle-endian -Os -std=c99 -ffunction-sections -Wall -fsigned-char -fdata-sections -Wunknown-pragmas -nostdlib -Wno-unused-function -Wno-unused-but-set-variable
+
+CPPFLAGS = 
+CPPFLAGS += -g -mthumb -mcpu=arm968e-s -march=armv5te -mthumb-interwork -mlittle-endian -Os -std=c++11 -ffunction-sections -Wall -fsigned-char -fdata-sections -Wunknown-pragmas -nostdlib -Wno-unused-function -Wno-unused-but-set-variable
 
 OSFLAGS =
 OSFLAGS += -g -marm -mcpu=arm968e-s -march=armv5te -mthumb-interwork -mlittle-endian -Os -std=c99 -ffunction-sections -Wall -fsigned-char -fdata-sections -Wunknown-pragmas
@@ -837,7 +845,7 @@ sinclude $(TY_DEPENDENCY_LIST)
 CUR_PATH = $(shell pwd)	
 .PHONY: application
 
-test_target: prerequirement $(OBJ_LIST) $(OBJ_S_LIST) $(OBJ_OS_LIST) $(TY_IOT_LIB)
+test_target: prerequirement $(OBJ_LIST) $(OBJ_S_LIST) $(OBJ_OS_LIST)  $(OBJ_CPP_LIST) $(TY_IOT_LIB)
 ifneq ($(COMPONENTS_LIB),)
 ifneq ($(COMP_SRCS),)
 	@$(MAKE) -f application.mk comp_libs
@@ -848,7 +856,7 @@ endif # COMPONENTS_LIB
 application: test_target
 ifeq ("${ota_idx}", "1")
 	$(Q)$(ECHO) "  $(GREEN)LD   $(APP_BIN_NAME)_$(APP_VERSION).axf$(NC)"
-	$(Q)$(LD) $(LFLAGS) -o $(TY_OUTPUT)/$(APP_BIN_NAME)_$(APP_VERSION).axf -Wl,--start-group $(OBJ_LIST) $(OBJ_S_LIST) $(OBJ_OS_LIST) $(LIBFLAGS) -Wl,--end-group -T./beken378/build/bk7231n_ota.ld
+	$(Q)$(LD) $(LFLAGS) -o $(TY_OUTPUT)/$(APP_BIN_NAME)_$(APP_VERSION).axf -Wl,--start-group $(OBJ_LIST) $(OBJ_S_LIST) $(OBJ_OS_LIST) $(OBJ_CPP_LIST) $(LIBFLAGS) -Wl,--end-group -T./beken378/build/bk7231n_ota.ld
 else ifeq ("${ota_idx}", "2")
 else
 	@echo ===========================================================
@@ -888,6 +896,12 @@ $(OBJ_DIR)/%.o: %.c
 	$(Q)$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 	$(Q)$(CC) $(CFLAGS) $(INCLUDES) -c $< -MM -MT $@ -MF $(patsubst %.o,%.d,$@)
 
+$(OBJ_DIR)/%.o: %.cc
+	$(Q)if [ ! -d $(dir $@) ]; then mkdir -p $(dir $@); fi
+	$(Q)$(ECHO) "  $(GREEN)CC   $<$(NC)"
+	$(Q)$(CPP) $(CPPFLAGS) $(INCLUDES) -c $< -o $@
+	$(Q)$(CPP) $(CPPFLAGS) $(INCLUDES) -c $< -MM -MT $@ -MF $(patsubst %.o,%.d,$@)
+
 $(OBJ_DIR)/%.O: %.S
 	$(Q)if [ ! -d $(dir $@) ]; then mkdir -p $(dir $@); fi
 	$(Q)$(ECHO) "  $(GREEN)AS   $<$(NC)"
@@ -903,6 +917,7 @@ $(OBJ_DIR)/%.marm.o: %.c
 -include $(DEPENDENCY_LIST)
 -include $(DEPENDENCY_S_LIST)
 -include $(DEPENDENCY_OS_LIST)
+-include $(DEPENDENCY_CPP_LIST)
 
 # -------------------------------------------------------------------	
 # Generate build info
