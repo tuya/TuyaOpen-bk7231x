@@ -17,4 +17,5 @@ gcc-arm-none-eabi-10.3-2021.10
 #
 CatalogKconfig
 
-beken_os/.app
+/beken_os/.app
+*.build/
