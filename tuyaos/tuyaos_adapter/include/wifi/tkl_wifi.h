@@ -97,12 +97,21 @@ typedef enum {
     WSS_DHCP_FAIL,                      ///< dhcp fail
 }WF_STATION_STAT_E;
 
+typedef struct {
+    CHAR_T ip[16];
+    CHAR_T mask[16];
+    CHAR_T gw[16];
+    CHAR_T dns[16];
+} FAST_DHCP_INFO_T;
 /* for fast connect*/
 typedef struct {
     uint32_t len;                                                    ///< data len
     uint8_t data[0];                                                ///< data buff
-}FAST_WF_CONNECTED_AP_INFO_T;
-
+} FAST_WF_CONNECTED_AP_INFO_T;
+typedef struct {
+    FAST_DHCP_INFO_T             fast_dhcp;
+    FAST_WF_CONNECTED_AP_INFO_T  fast_mac;
+} FAST_CONNECTED_INFO_T;
 /* tuya sdk definition of wifi event notify */
 typedef enum
 {
@@ -135,6 +144,7 @@ typedef enum {
     TUYA_WLAN_REASON_4WAYS_HANDSHAKE_TIMEOUT,        ///< Timeout of 4-way handshake
     TUYA_WLAN_REASON_INACTIVITY_DISCONNECT,          ///< Station disconnected to AP beacause of in activity
     TUYA_WLAN_REASON_DEAUTH_LEAVING,                 ///< Deauth the station because it was left
+    TUYA_WLAN_REASON_AP_UNABLE_TO_HANDLE_NEW_STA,    ///< Association denied because AP is unable to handle additional associated STAs
     TUYA_WLAN_REASON_MAX,
 } WF_DISCONN_REASON_E;
 
@@ -142,8 +152,24 @@ typedef enum {
 typedef enum {
     WFI_BEACON_CMD,
     WFI_GET_LAST_DISCONN_REASON,                     ///< Get WiFi last disconnect reason
-    WFI_AP_GET_STALIST_CMD,
+    WFI_AP_GET_STALIST_CMD,                          ///< Get Sta List Cmd 
+    WFI_CONNECT_CMD,
 } WF_IOCTL_CMD_E;
+
+typedef struct {
+    uint8_t    *ssid;
+    uint8_t    *passwd;
+    uint8_t     channel;
+} WF_IOCTL_CONN_T;
+
+typedef enum {
+    IPV4_DHCP_SUCC,
+    IPV4_DHCP_FAIL,
+    IPV6_LL_SUCC,
+    IPV6_LL_FAIL,
+    IPV6_DHCP_SUCC,
+    IPV6_DHCP_FAIL,
+} LWIP_EVENT_E;
 
 typedef struct {
     uint8_t     ssid[WIFI_SSID_LEN + 1];
