@@ -75,7 +75,7 @@ extern void dhcp_server_stop(void);
 extern void net_configure_dns(struct wlan_ip_config *ip);
 extern FUNC_1PARAM_PTR bk_wlan_get_status_cb(void);
 
-extern struct netif xnetif[NETIF_NUM];
+// extern struct netif xnetif[NETIF_NUM];
 
 #ifdef CONFIG_IPV6
 char *ipv6_addr_state_to_desc(unsigned char addr_state)
@@ -772,10 +772,10 @@ void net_wlan_add_netif(void *mac)
     }
 
 	if(vif_entry->type == VIF_AP) {
-		g_uap.netif = &xnetif[1];
+		g_uap.netif = tuya_ethernetif_get_netif_by_index(1);
 		wlan_if = &g_uap;
     } else if(vif_entry->type == VIF_STA) {
-		g_mlan.netif = &xnetif[0];
+		g_mlan.netif = tuya_ethernetif_get_netif_by_index(0);;
         wlan_if = &g_mlan;
     } else {
         os_printf("%s role invalid\r\n", __FUNCTION__);

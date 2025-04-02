@@ -27,6 +27,18 @@
 #include "tuya_error_code.h"
 // --- END: user defines and implements ---
 
+extern void *net_get_sta_handle(void);
+extern void *net_get_uap_handle(void);
+struct netif *tkl_lwip_get_netif_by_index(int net_if_idx)
+{
+    if(net_if_idx == 0)
+        return net_get_sta_handle();
+    else if(net_if_idx == 1)
+        return net_get_uap_handle();
+
+    return NULL;
+}
+
 /**
  * @brief ethernet interface hardware init
  *
