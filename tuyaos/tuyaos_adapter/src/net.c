@@ -52,7 +52,7 @@ uint32_t uap_ip_start_flag = 0;
 typedef void (*net_sta_ipup_cb_fn)(void* data);
 
 struct interface {
-	struct netif *netif;
+	struct netif netif;
 	ip_addr_t ipaddr;
 	ip_addr_t nmask;
 	ip_addr_t gw;
@@ -111,7 +111,7 @@ char *ipv6_addr_type_to_desc(struct ipv6_config *ipv6_conf)
 
 int net_dhcp_hostname_set(char *hostname)
 {
-	netif_set_hostname(g_mlan.netif, hostname);
+	netif_set_hostname(&g_mlan.netif, hostname);
 	return 0;
 }
 
@@ -175,7 +175,7 @@ void net_wlan_init(void)
 	if (!wlan_init_done) {
 		net_ipv4stack_init();
 		g_mlan.ipaddr.addr = INADDR_ANY;
-		ret = netifapi_netif_add(g_mlan.netif, &g_mlan.ipaddr,
+		ret = netifapi_netif_add(&g_mlan.netif, &g_mlan.ipaddr,
 					 &g_mlan.ipaddr, &g_mlan.ipaddr, NULL,
 					 lwip_netif_init, tcpip_input);
 		if (ret) {
@@ -186,7 +186,7 @@ void net_wlan_init(void)
 		net_ipv6stack_init(&g_mlan.netif);
 #endif /* CONFIG_IPV6 */
 
-		ret = netifapi_netif_add(g_uap.netif, &g_uap.ipaddr,
+		ret = netifapi_netif_add(&g_uap.netif, &g_uap.ipaddr,
 					 &g_uap.ipaddr, &g_uap.ipaddr, NULL,
 					 lwip_netif_uap_init, tcpip_input);
 		if (ret) {
@@ -349,13 +349,13 @@ void *net_get_netif_handle(uint8_t iface)
 void net_interface_up(void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
-	netifapi_netif_set_up(if_handle->netif);
+	netifapi_netif_set_up(&if_handle->netif);
 }
 
 void net_interface_down(void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
-	netifapi_netif_set_down(if_handle->netif);
+	netifapi_netif_set_down(&if_handle->netif);
 }
 
 #ifdef CONFIG_IPV6
@@ -363,15 +363,15 @@ void net_interface_deregister_ipv6_callback(void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 	if (intrfc_handle == &g_mlan)
-		netif_set_ipv6_status_callback(if_handle->netif, NULL);
+		netif_set_ipv6_status_callback(&if_handle->netif, NULL);
 }
 #endif
 
 void net_interface_dhcp_stop(void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
-	netifapi_dhcp_stop(if_handle->netif);
-	netif_set_status_callback(if_handle->netif, NULL);
+	netifapi_dhcp_stop(&if_handle->netif);
+	netif_set_status_callback(&if_handle->netif, NULL);
 }
 
 void sta_ip_down(void)
@@ -382,9 +382,9 @@ void sta_ip_down(void)
 		
 		sta_ip_start_flag = 0;
 		
-		netifapi_netif_set_down(g_mlan.netif);
-		netif_set_status_callback(g_mlan.netif, NULL);
-		netifapi_dhcp_stop(g_mlan.netif);
+		netifapi_netif_set_down(&g_mlan.netif);
+		netif_set_status_callback(&g_mlan.netif, NULL);
+		netifapi_dhcp_stop(&g_mlan.netif);
 	}
 }
 
@@ -412,17 +412,17 @@ void sta_ip_start(void)
 
 void sta_set_vif_netif(void)
 {
-    rwm_mgmt_set_vif_netif(g_mlan.netif);
+    rwm_mgmt_set_vif_netif(&g_mlan.netif);
 }
 
 void ap_set_vif_netif(void)
 {
-    rwm_mgmt_set_vif_netif(g_uap.netif);
+    rwm_mgmt_set_vif_netif(&g_uap.netif);
 }
 
 void sta_set_default_netif(void)
 {
-    netifapi_netif_set_default(g_mlan.netif);
+    netifapi_netif_set_default(&g_mlan.netif);
 }
 
 void ap_set_default_netif(void)
@@ -431,7 +431,7 @@ void ap_set_default_netif(void)
     // boardcast or not sub net packets, need set ap netif before
     // send those packets, after finish sending, reset default netif
     // to sat's netif.
-    netifapi_netif_set_default(g_uap.netif);
+    netifapi_netif_set_default(&g_uap.netif);
 }
 
 void reset_default_netif(void)
@@ -451,8 +451,8 @@ void uap_ip_down(void)
 		os_printf("uap_ip_down\r\n");
 		uap_ip_start_flag = 0;
 		
-		netifapi_netif_set_down(g_uap.netif);
-		netif_set_status_callback(g_uap.netif, NULL);
+		netifapi_netif_set_down(&g_uap.netif);
+		netif_set_status_callback(&g_uap.netif, NULL);
 		dhcp_server_stop();
 	}
 }
@@ -545,20 +545,20 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 		(if_handle == &g_mlan) ? "mlan" :"uap",
 		(addr->addr_type == ADDR_TYPE_DHCP)
 		? "DHCPc" : "IP");
-	netifapi_netif_set_down(if_handle->netif);
+	netifapi_netif_set_down(&if_handle->netif);
 
 	/* De-register previously registered DHCP Callback for correct
 	 * address configuration.
 	 */
-	netif_set_status_callback(if_handle->netif, NULL);
+	netif_set_status_callback(&if_handle->netif, NULL);
 #ifdef CONFIG_IPV6
 	if (if_handle == &g_mlan) {
-		netif_set_ipv6_status_callback(if_handle->netif,
+		netif_set_ipv6_status_callback(&if_handle->netif,
 			wm_netif_ipv6_status_callback);
 		/* Explicitly call this function so that the linklocal address
 		 * gets updated even if the interface does not get any IPv6
 		 * address in its lifetime */
-		wm_netif_ipv6_status_callback(if_handle->netif);
+		wm_netif_ipv6_status_callback(&if_handle->netif);
 	}
 #endif
 	switch (addr->addr_type) {
@@ -566,13 +566,13 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 		if_handle->ipaddr.addr = addr->address;
 		if_handle->nmask.addr = addr->netmask;
 		if_handle->gw.addr = addr->gw;
-		netifapi_netif_set_addr(if_handle->netif, &if_handle->ipaddr,
+		netifapi_netif_set_addr(&if_handle->netif, &if_handle->ipaddr,
 					&if_handle->nmask, &if_handle->gw);
-		netifapi_netif_set_up(if_handle->netif);
+		netifapi_netif_set_up(&if_handle->netif);
 		net_configure_dns((struct wlan_ip_config *)addr);
         if (if_handle == &g_mlan)
         {
-		    netif_set_status_callback(if_handle->netif,
+		    netif_set_status_callback(&if_handle->netif,
 					wm_netif_status_static_callback);
         }
 		break;
@@ -582,13 +582,13 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 		memset(&if_handle->ipaddr, 0, sizeof(ip_addr_t));
 		memset(&if_handle->nmask, 0, sizeof(ip_addr_t));
 		memset(&if_handle->gw, 0, sizeof(ip_addr_t));
-		netifapi_netif_set_addr(if_handle->netif, &if_handle->ipaddr,
+		netifapi_netif_set_addr(&if_handle->netif, &if_handle->ipaddr,
 				&if_handle->nmask, &if_handle->gw);
 
-		netif_set_status_callback(if_handle->netif,
+		netif_set_status_callback(&if_handle->netif,
 					wm_netif_status_callback);
-		netifapi_netif_set_up(if_handle->netif);
-		netifapi_dhcp_start(if_handle->netif);
+		netifapi_netif_set_up(&if_handle->netif);
+		netifapi_dhcp_start(&if_handle->netif);
 		break;
 
 	default:
@@ -627,10 +627,10 @@ int net_get_if_addr(struct wlan_ip_config *addr, void *intrfc_handle)
 	const ip_addr_t *tmp;
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
-    if(netif_is_up(if_handle->netif)) {
-    	addr->ipv4.address = if_handle->netif->ip_addr.addr;
-    	addr->ipv4.netmask = if_handle->netif->netmask.addr;
-    	addr->ipv4.gw = if_handle->netif->gw.addr;
+    if(netif_is_up(&if_handle->netif)) {
+    	addr->ipv4.address = if_handle->netif.ip_addr.addr;
+    	addr->ipv4.netmask = if_handle->netif.netmask.addr;
+    	addr->ipv4.gw = if_handle->netif.gw.addr;
 
     	tmp = dns_getserver(0);
     	addr->ipv4.dns1 = tmp->addr;
@@ -645,7 +645,7 @@ int net_get_if_macaddr(void *macaddr, void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
-    os_memcpy(macaddr, &if_handle->netif->hwaddr[0], if_handle->netif->hwaddr_len);
+    os_memcpy(macaddr, &if_handle->netif.hwaddr[0], if_handle->netif.hwaddr_len);
 
 	return 0;
 }
@@ -658,8 +658,8 @@ int net_get_if_ipv6_addr(struct wlan_ip_config *addr, void *intrfc_handle)
 
 	for (i = 0; i < MAX_IPV6_ADDRESSES; i++) {
 		memcpy(addr->ipv6[i].address,
-			if_handle->netif->ip6_addr[i].addr, 16);
-		addr->ipv6[i].addr_state = if_handle->netif->ip6_addr_state[i];
+			if_handle->netif.ip6_addr[i].addr, 16);
+		addr->ipv6[i].addr_state = if_handle->netif.ip6_addr_state[i];
 	}
 	/* TODO carry out more processing based on IPv6 fields in netif */
 	return 0;
@@ -671,9 +671,9 @@ int net_get_if_ipv6_pref_addr(struct wlan_ip_config *addr, void *intrfc_handle)
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
 	for (i = 0; i < MAX_IPV6_ADDRESSES; i++) {
-		if (if_handle->netif->ip6_addr_state[i] == IP6_ADDR_PREFERRED) {
+		if (if_handle->netif.ip6_addr_state[i] == IP6_ADDR_PREFERRED) {
 			memcpy(addr->ipv6[ret++].address,
-				if_handle->netif->ip6_addr[i].addr, 16);
+				if_handle->netif.ip6_addr[i].addr, 16);
 		}
 	}
 	return ret;
@@ -684,7 +684,7 @@ int net_get_if_ip_addr(uint32_t *ip, void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
-	*ip = if_handle->netif->ip_addr.addr;
+	*ip = if_handle->netif.ip_addr.addr;
 	return 0;
 }
 
@@ -692,7 +692,7 @@ int net_get_if_ip_mask(uint32_t *nm, void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
-	*nm = if_handle->netif->netmask.addr;
+	*nm = if_handle->netif.netmask.addr;
 	return 0;
 }
 
@@ -700,7 +700,7 @@ int net_get_if_gw_addr(uint32_t *ip, void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
-	*ip = ip_addr_get_ip4_u32(&if_handle->netif->gw);
+	*ip = ip_addr_get_ip4_u32(&if_handle->netif.gw);
 	return 0;
 }
 
@@ -772,36 +772,34 @@ void net_wlan_add_netif(void *mac)
     }
 
 	if(vif_entry->type == VIF_AP) {
-		g_uap.netif = tuya_ethernetif_get_netif_by_index(1);
 		wlan_if = &g_uap;
     } else if(vif_entry->type == VIF_STA) {
-		g_mlan.netif = tuya_ethernetif_get_netif_by_index(0);;
         wlan_if = &g_mlan;
     } else {
         os_printf("%s role invalid\r\n", __FUNCTION__);
         return ;
     }
 
-	if (netif_is_added(wlan_if->netif)) {
+	if (netif_is_added(&wlan_if->netif)) {
     	os_printf("%s already exist!, vif_idx:%d\r\n", __FUNCTION__, vif_idx);
 	} else {
 		os_printf("%s add netif vif_idx:%d\r\n", __FUNCTION__, vif_idx);
-		netifapi_netif_add(wlan_if->netif, &wlan_if->ipaddr,
+		netifapi_netif_add(&wlan_if->netif, &wlan_if->ipaddr,
 				 &wlan_if->ipaddr, &wlan_if->ipaddr, (void*)vif_entry,
 				 tuya_ethernetif_init, tcpip_input); 
 	}
 
     wlan_if->ipaddr.addr = INADDR_ANY;
-	wlan_if->netif->state = vif_entry;
+	wlan_if->netif.state = vif_entry;
 
 	unsigned char *macptr = (unsigned char *)&vif_entry->mac_addr;
 
-	wlan_if->netif->hwaddr_len = ETHARP_HWADDR_LEN;
-	os_memcpy(wlan_if->netif->hwaddr, macptr, ETHARP_HWADDR_LEN);
+	wlan_if->netif.hwaddr_len = ETHARP_HWADDR_LEN;
+	os_memcpy(wlan_if->netif.hwaddr, macptr, ETHARP_HWADDR_LEN);
 	os_printf("mac %2x:%2x:%2x:%2x:%2x:%2x\r\n", macptr[0], macptr[1], macptr[2],
 				macptr[3], macptr[4], macptr[5]);
 
-    vif_entry->priv = wlan_if->netif;
+    vif_entry->priv = &wlan_if->netif;
 
     os_printf("%s done!, vif_idx:%d\r\n", __FUNCTION__, vif_idx);
 }
