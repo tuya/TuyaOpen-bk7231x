@@ -1,11 +1,7 @@
 #!/bin/bash
 # 参数说明：
-# $1 - example name: echo_app_top
-# $2 - example version: 1.0.0
-# $3 - header files directory:
-# $4 - libs directory:
-# $5 - libs: tuyaos tuyaapp
-# $6 - output directory:
+# $1 - params path: echo_app_top
+# $2 - user cmd: build / clean / ...
 
 print_not_null()
 {
@@ -20,13 +16,18 @@ print_not_null()
 set -e
 cd `dirname $0`
 
-EXAMPLE_NAME=$1
-EXAMPLE_VER=$2
-HEADER_DIR=$3
-LIBS_DIR=$4
-LIBS=$5
-OUTPUT_DIR=$6
-USER_CMD=$7
+BUILD_PARAM_DIR=$1
+BUILD_PARAM_FILE=$BUILD_PARAM_DIR/build_param.config
+. $BUILD_PARAM_FILE
+
+EXAMPLE_NAME=$CONFIG_PROJECT_NAME
+EXAMPLE_VER=$CONFIG_PROJECT_VERSION
+HEADER_DIR=$OPEN_HEADER_DIR
+LIBS_DIR=$OPEN_LIBS_DIR
+LIBS=$PLATFORM_NEED_LIBS
+OUTPUT_DIR=$BIN_OUTPUT_DIR
+USER_CMD=$2
+BOARD_NAME=$PLATFORM_BOARD
 
 APP_BIN_NAME=$EXAMPLE_NAME
 APP_VERSION=$EXAMPLE_VER
@@ -36,12 +37,14 @@ if [ "$USER_CMD" = "build" ]; then
 fi
 
 # echo APP_BIN_NAME=$APP_BIN_NAME
-# echo APP_VERSION=$EXAMPLE_VER
+# echo APP_VERSION=$APP_VERSION
 # echo USER_CMD=$USER_CMD
 # echo LIBS_DIR=$LIBS_DIR
 # echo LIBS=$LIBS
 # echo OUTPUT_DIR=$OUTPUT_DIR
 # echo HEADER_DIR=$HEADER_DIR
+# echo BOARD_NAME=$BOARD_NAME
+# exit 0
 
 echo "Start Compile"
 set -e
