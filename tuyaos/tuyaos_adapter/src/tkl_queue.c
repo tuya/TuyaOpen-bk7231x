@@ -70,7 +70,7 @@ OPERATE_RET tkl_queue_post(const TKL_QUEUE_HANDLE queue, void *data, uint32_t ti
 
     extern uint32_t bk_wlan_get_INT_status(void);
     if (FALSE == bk_wlan_get_INT_status()) {
-        if (timeout == TKL_QUEUE_WAIT_FROEVER) {
+        if (timeout == TKL_QUEUE_WAIT_FOREVER) {
             ret = xQueueSend(queue, data, portMAX_DELAY);
         } else {
             uint32_t ticks = timeout / portTICK_RATE_MS;
@@ -117,7 +117,7 @@ OPERATE_RET tkl_queue_fetch(const TKL_QUEUE_HANDLE queue, void *msg, uint32_t ti
         msg = &dummyptr;
     }
 
-    if (timeout == TKL_QUEUE_WAIT_FROEVER) {
+    if (timeout == TKL_QUEUE_WAIT_FOREVER) {
         ret = xQueueReceive(queue, msg, portMAX_DELAY);
     } else {
         uint32_t ticks = timeout / portTICK_RATE_MS;

@@ -98,10 +98,10 @@ typedef enum {
 }WF_STATION_STAT_E;
 
 typedef struct {
-    CHAR_T ip[16];
-    CHAR_T mask[16];
-    CHAR_T gw[16];
-    CHAR_T dns[16];
+    char ip[16];
+    char mask[16];
+    char gw[16];
+    char dns[16];
 } FAST_DHCP_INFO_T;
 /* for fast connect*/
 typedef struct {
