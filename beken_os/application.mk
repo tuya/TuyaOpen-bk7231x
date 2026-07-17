@@ -153,6 +153,7 @@ INCLUDES += -I./beken378/func/$(WPA_VERSION)/bk_patch
 #INCLUDES += -I./beken378/func/lwip_intf/lwip-2.0.2/src/include/lwip
 INCLUDES += -I../tuyaos/tuyaos_adapter/include
 INCLUDES += -I../tuyaos/tuyaos_adapter/include/lwip
+INCLUDES += -I../tuyaos/tuyaos_adapter/tuyaopen
 INCLUDES += -I./beken378/func/temp_detect
 INCLUDES += -I./beken378/func/spidma_intf
 INCLUDES += -I./beken378/func/rwnx_intf
@@ -725,6 +726,7 @@ SRC_C += ./beken378/os/str_arch.c
 #examples for customer
 TY_SRC_DIRS += $(shell find ../tuyaos/tuyaos_adapter/src -type d)
 TY_SRC_DIRS += $(shell find ../tuyaos/tuyaos_adapter/include -type d)
+TY_SRC_DIRS += $(shell find ../tuyaos/tuyaos_adapter/tuyaopen -type d)
 
 SRC_C += $(foreach dir, $(TY_SRC_DIRS), $(wildcard $(dir)/*.c)) # need export
 SRC_C += $(foreach dir, $(TY_SRC_DIRS), $(wildcard $(dir)/*.s)) 
